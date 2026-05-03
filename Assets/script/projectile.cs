@@ -1,0 +1,41 @@
+using UnityEngine;
+using UnityEngine.InputSystem;
+
+public class projectile : MonoBehaviour
+{
+	[SerializeField] private Transform shootPoint;
+	[SerializeField] private GameObject target;
+	[SerializeField] private GameObject bulletPrefab;
+	// Start is called once before the first execution of Update after the MonoBehaviour is created
+	//void Start(){...}
+	// Update is called once per frame
+	void Update()
+	{
+		Vector2 screenPos = Mouse.current.position.ReadValue();
+		if (Mouse.current.leftButton.wasPressedThisFrame)
+		{
+			Ray ray = Camera.main.ScreenPointToRay(screenPos);
+			Debug.DrawRay(ray.origin, ray.direction * 5f, Color.red, 5f);
+			RaycastHit2D hit = Physics2D.GetRayIntersection(ray, Mathf.Infinity);
+			if (hit.collider != null)
+			{
+				target.transform.position = new Vector2(hit.point.x, hit.point.y);
+				Debug.Log($"Hit{hit.collider.gameObject.name}");
+				Vector2 projectileVelocity = CalculateProjectileVelocity(shootPoint.position, hit.point, 1f);
+				GameObject bullet = Instantiate(bulletPrefab, shootPoint.position, Quaternion.identity);
+				Rigidbody2D shootBullet = bullet.GetComponent<Rigidbody2D>();
+				shootBullet.linearVelocity = projectileVelocity;
+			}
+		}
+
+
+	}
+	Vector2 CalculateProjectileVelocity(Vector2 origin, Vector2 target, float time)
+	{
+		Vector2 direction = target - origin;
+		return new Vector2(
+			direction.x / time,
+			(direction.y / time) + 0.5f * Mathf.Abs(Physics2D.gravity.y) * time
+			);
+	}
+}
